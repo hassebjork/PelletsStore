@@ -2,13 +2,12 @@
 
 #define CONFIG_FILE_NAME "/etc/pellets-store.conf"
 
+#ifdef _MYSQL
 static const char * CREATE_TABLE_MYSQL[] =  {
-#if _DEBUG > 2
- 	"DROP TABLE IF EXISTS ps_pellets",
-#endif
 	"CREATE TABLE IF NOT EXISTS ps_pellets( id INT NOT NULL AUTO_INCREMENT, distance SMALLINT, time TIMESTAMP, PRIMARY KEY (id) )",
 	0
 };
+#endif
 
 int main( int argc, char *argv[]) {
 	int       pellets_depth;
@@ -18,13 +17,9 @@ int main( int argc, char *argv[]) {
 	if ( pellets_sensor ) {
 		pellets_depth = hc_sample( pellets_sensor, config->pelletsSamples );
 		printf ( "%d cm\n", pellets_depth );
-		if ( pellets_depth > 0 && config->mysql ) {
-			char query[256] = "";
-			sprintf( query, "INSERT INTO `ps_pellets` (`distance`) VALUES (%d)", pellets_depth ); 
-			if ( mysql_query( db, query ) ) {
-				fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
-			}
-		}
+#ifdef _MYSQL
+		mysqlPelletsStore( pellets_depth );
+#endif
 	}
 	
 	return 0;
@@ -39,7 +34,9 @@ void setup( void ) {
 	}
 	
 	configRead();
-	setupMysql();
+#ifdef _MYSQL
+	mysqlSetup();
+#endif
 	wiringPiSetup();
 	
 	pellets_sensor = hc_init( config->pelletsTriggerPin, config->pelletsEchoPin );
@@ -86,7 +83,8 @@ int configRead() {
 	return 0;
 }
 
-void setupMysql() {
+#ifdef _MYSQL
+void mysqlSetup() {
 	int i;
 	my_bool myb = 1;
 
@@ -117,3 +115,14 @@ void setupMysql() {
 		}
 	}
 }
+
+void mysqlPelletsStore( int distance ) {
+	char query[256] = "";
+	if ( distance > 0 && config->mysql ) {
+		sprintf( query, "INSERT INTO `ps_pellets` (`distance`) VALUES (%d)", distance ); 
+		if ( mysql_query( db, query ) ) {
+			fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
+		}
+	}
+}
+#endif

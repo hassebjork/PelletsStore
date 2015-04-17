@@ -1,23 +1,29 @@
 PREFIX=/usr/
-MYSQL_CFLAGS=$(shell mysql_config --cflags)
-MYSQL_LIBS=$(shell mysql_config --libs)
 
-all: pellets-store
+all: store mysql
 
-pellets-store: hc-sensor.c config.c pellets-store.c
-	gcc -o pellets-store\
+store: hc-sensor.c config.c pellets-store.c
+	gcc -o pellets-store \
 		-D_DEBUG=0 \
 		-lwiringPi \
-		$(MYSQL_CFLAGS) \
-		$(MYSQL_LIBS) \
+		hc-sensor.c config.c pellets-store.c
+
+mysql: hc-sensor.c config.c pellets-store.c
+	gcc -o pellets-mysql \
+		-D_DEBUG=0 \
+		-D_MYSQL=1 \
+		-lwiringPi \
+		$(shell mysql_config --cflags) \
+		$(shell mysql_config --libs) \
 		hc-sensor.c config.c pellets-store.c
 
 debug: hc-sensor.c config.c pellets-store.c
-	gcc -o pellets-store\
+	gcc -o pellets-store \
 		-D_DEBUG=2 -g -ggdb \
+		-D_MYSQL=1 \
 		-lwiringPi \
-		$(MYSQL_CFLAGS) \
-		$(MYSQL_LIBS) \
+		$(shell mysql_config --cflags) \
+		$(shell mysql_config --libs) \
 		hc-sensor.c config.c pellets-store.c
 
 clean:

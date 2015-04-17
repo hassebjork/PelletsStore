@@ -1,7 +1,6 @@
 #ifndef _PELLETS_STORE_h_
 #define _PELLETS_STORE_h_
 
-#include <mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "config.h"
@@ -20,12 +19,17 @@ typedef struct {
 } ConfigSettings;
 
 ConfigSettings 	*config;
-MYSQL 		*db;
 HCSensor 	*pellets_sensor;
 
 int main( int argc, char *argv[]);
 void setup( void );
 int configRead();
-void setupMysql();
+
+#ifdef _MYSQL
+#include <mysql.h>
+MYSQL 		*db;
+void mysqlSetup();
+void mysqlPelletsStore( int distance );
+#endif
 
 #endif
