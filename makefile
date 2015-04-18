@@ -1,12 +1,19 @@
 PREFIX=/usr/
 
-all: store mysql
+all: store mysql udp
 
 store: hc-sensor.c config.c pellets-store.c
 	gcc -o pellets-store \
 		-D_DEBUG=0 \
 		-lwiringPi \
 		hc-sensor.c config.c pellets-store.c
+
+udp: hc-sensor.c config.c pellets-store.c client-udp.c
+	gcc -o pellets-udp \
+		-D_DEBUG=0 \
+		-D_UDP=1 \
+		-lwiringPi \
+		hc-sensor.c config.c pellets-store.c client-udp.c
 
 mysql: hc-sensor.c config.c pellets-store.c
 	gcc -o pellets-mysql \

@@ -13,9 +13,13 @@ typedef struct {
 	char  mysqlPass[MAX_TAG_SIZE];
 	char  mysqlDatabase[MAX_TAG_SIZE];
 	
-	int  pelletsEchoPin;
-	int  pelletsTriggerPin;
-	int  pelletsSamples;
+	char  server;
+	char  udpServer[15];
+	int   udpPort;
+	
+	int   pelletsEchoPin;
+	int   pelletsTriggerPin;
+	int   pelletsSamples;
 } ConfigSettings;
 
 ConfigSettings 	*config;
@@ -32,4 +36,10 @@ void mysqlSetup();
 void mysqlPelletsStore( int distance );
 #endif
 
+#ifdef _UDP
+#include "client-udp.h"
+void udpPelletsStore( int distance );
 #endif
+
+#endif
+

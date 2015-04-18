@@ -16,10 +16,13 @@ int main( int argc, char *argv[]) {
 	
 	if ( pellets_sensor ) {
 		pellets_depth = hc_sample( pellets_sensor, config->pelletsSamples );
-		printf ( "%d cm\n", pellets_depth );
 #ifdef _MYSQL
 		mysqlPelletsStore( pellets_depth );
 #endif
+#ifdef _UDP
+		udpPelletsStore( pellets_depth );
+#endif
+		printf ( "%d cm\n", pellets_depth );
 	}
 	
 	return 0;
@@ -56,6 +59,8 @@ int configRead() {
 	config->pelletsEchoPin    = 0;
 	config->pelletsTriggerPin = 1;
 	config->pelletsSamples    = 7;
+	config->udpServer[0]      = '\0';
+	config->udpPort     = 0;
 	
 	if ( ( fp = fopen( CONFIG_FILE_NAME, "r" ) ) == NULL ) {
 		fprintf( stderr, "ERROR: Could not read configuration file %s\n", CONFIG_FILE_NAME );
@@ -74,11 +79,14 @@ int configRead() {
 			else if ( configIntVar( rdBuf, "pelletsEchoPin", &config->pelletsEchoPin ) ) {}
 			else if ( configIntVar( rdBuf, "pelletsTriggerPin", &config->pelletsTriggerPin ) ) {}
 			else if ( configIntVar( rdBuf, "pelletsSamples", &config->pelletsSamples ) ) {}
+			else if ( configStringVar( rdBuf, "udpServer", config->udpServer ) ) {}
+			else if ( configIntVar( rdBuf, "udpPort", &config->udpPort ) ) {}
 		}
 	}
 	fclose( fp );
 	
-	config->mysql = ( config->mysqlServer[0] != 0 && config->mysqlUser[0] != 0 && config->mysqlPass[0] != 0 && config->mysqlDatabase[0] != 0 );
+	config->mysql  = ( config->mysqlServer[0] != 0 && config->mysqlUser[0] != 0 && config->mysqlPass[0] != 0 && config->mysqlDatabase[0] != 0 );
+	config->server = ( config->udpServer[0] != 0 && config->udpPort != 0 );
 	
 	return 0;
 }
@@ -123,6 +131,18 @@ void mysqlPelletsStore( int distance ) {
 		if ( mysql_query( db, query ) ) {
 			fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
 		}
+	}
+}
+#endif
+
+#ifdef _UDP
+void udpPelletsStore( int distance ) {
+	fprintf( stderr, "Using UDP client: %s:%d\n", config->udpServer, config->udpPort );
+	char data[256] = "";
+	if ( distance > 0 && config->server ) {
+		sprintf( data, "PELL DIST%d", distance ); 
+		if ( client_udp( data, config->udpServer, config->udpPort ) == 1 )
+			config->server = 0;
 	}
 }
 #endif
