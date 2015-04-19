@@ -1,0 +1,34 @@
+/*************************************************************************
+   config.h
+
+**************************************************************************
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
+   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+   TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+   PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT 
+   HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+   OF OR INABILITY TO USE THIS SOFTWARE, EVEN IF THE COPYRIGHT HOLDERS OR 
+   CONTRIBUTORS ARE AWARE OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*************************************************************************/
+
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
+#include <string.h>
+#include <stdio.h>
+
+#define READ_BUFSIZE 1000
+#define MAX_TAG_SIZE 200
+
+int configStringVar( char *buf, char *matchStr, char *destStr );
+int configIntVar( char *buf, char *matchStr, int *valp );
+int configFloatVar( char *buf, char *matchStr, float *valp );
+
+#endif

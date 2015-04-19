@@ -20,6 +20,8 @@ typedef struct {
 	int   pelletsEchoPin;
 	int   pelletsTriggerPin;
 	int   pelletsSamples;
+	int   pelletsFull;
+	int   pelletsEmpty;
 } ConfigSettings;
 
 ConfigSettings 	*config;

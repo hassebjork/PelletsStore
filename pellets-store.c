@@ -4,25 +4,35 @@
 
 #ifdef _MYSQL
 static const char * CREATE_TABLE_MYSQL[] =  {
-	"CREATE TABLE IF NOT EXISTS ps_pellets( id INT NOT NULL AUTO_INCREMENT, distance SMALLINT, time TIMESTAMP, PRIMARY KEY (id) )",
+	"CREATE TABLE IF NOT EXISTS `ps_pellets`( `id` INT NOT NULL AUTO_INCREMENT, `level` INT, `time` TIMESTAMP, PRIMARY KEY (`id`) ) DEFAULT CHARSET=utf8",
 	0
 };
 #endif
 
 int main( int argc, char *argv[]) {
-	int       pellets_depth;
+	int pellets_level;
 	
 	setup();
 	
-	if ( pellets_sensor ) {
-		pellets_depth = hc_sample( pellets_sensor, config->pelletsSamples );
+	if ( pellets_sensor 
+		&& ( pellets_level = hc_sample( pellets_sensor, config->pelletsSamples ) ) >= 0 ) {
+// 		printf ( "%d cm\n", pellets_level );
+		
+		// Convert to percent
+		pellets_level = 100 - ( pellets_level - config->pelletsFull ) * 100 / config->pelletsEmpty;
+		if ( pellets_level < -15 || pellets_level > 115 ) {
+			fprintf( stderr, "ERROR: Pellets level out of bounds %d%%\n", pellets_level );
+		} else {
+		
+			// Store and display values
 #ifdef _MYSQL
-		mysqlPelletsStore( pellets_depth );
+			mysqlPelletsStore( pellets_level );
 #endif
 #ifdef _UDP
-		udpPelletsStore( pellets_depth );
+			udpPelletsStore( pellets_level );
 #endif
-		printf ( "%d cm\n", pellets_depth );
+			printf ( "%d %%\n", pellets_level );
+		}
 	}
 	
 	return 0;
@@ -59,8 +69,10 @@ int configRead() {
 	config->pelletsEchoPin    = 0;
 	config->pelletsTriggerPin = 1;
 	config->pelletsSamples    = 7;
+	config->pelletsFull       = 0;
+	config->pelletsEmpty      = 100;
 	config->udpServer[0]      = '\0';
-	config->udpPort     = 0;
+	config->udpPort           = 0;
 	
 	if ( ( fp = fopen( CONFIG_FILE_NAME, "r" ) ) == NULL ) {
 		fprintf( stderr, "ERROR: Could not read configuration file %s\n", CONFIG_FILE_NAME );
@@ -79,6 +91,8 @@ int configRead() {
 			else if ( configIntVar( rdBuf, "pelletsEchoPin", &config->pelletsEchoPin ) ) {}
 			else if ( configIntVar( rdBuf, "pelletsTriggerPin", &config->pelletsTriggerPin ) ) {}
 			else if ( configIntVar( rdBuf, "pelletsSamples", &config->pelletsSamples ) ) {}
+			else if ( configIntVar( rdBuf, "pelletsFull", &config->pelletsFull ) ) {}
+			else if ( configIntVar( rdBuf, "pelletsEmpty", &config->pelletsEmpty ) ) {}
 			else if ( configStringVar( rdBuf, "udpServer", config->udpServer ) ) {}
 			else if ( configIntVar( rdBuf, "udpPort", &config->udpPort ) ) {}
 		}
@@ -126,8 +140,8 @@ void mysqlSetup() {
 
 void mysqlPelletsStore( int distance ) {
 	char query[256] = "";
-	if ( distance > 0 && config->mysql ) {
-		sprintf( query, "INSERT INTO `ps_pellets` (`distance`) VALUES (%d)", distance ); 
+	if ( config->mysql ) {
+		sprintf( query, "INSERT INTO `ps_pellets` (`level`) VALUES (%d)", distance );
 		if ( mysql_query( db, query ) ) {
 			fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
 		}
