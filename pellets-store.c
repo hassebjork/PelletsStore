@@ -4,7 +4,7 @@
 
 #ifdef _MYSQL
 static const char * CREATE_TABLE_MYSQL[] =  {
-	"CREATE TABLE IF NOT EXISTS `ps_pellets`( `id` INT NOT NULL AUTO_INCREMENT, `level` INT, `time` TIMESTAMP, PRIMARY KEY (`id`) ) DEFAULT CHARSET=utf8",
+	"CREATE TABLE IF NOT EXISTS `ps_pellets`( `id` INT NOT NULL AUTO_INCREMENT, `level` INT, `samples` INT UNSIGNED NOT NULL DEFAULT 1, `time` TIMESTAMP, PRIMARY KEY (`id`) ) DEFAULT CHARSET=utf8",
 	0
 };
 #endif
@@ -26,7 +26,8 @@ int main( int argc, char *argv[]) {
 		
 			// Store and display values
 #ifdef _MYSQL
-			mysqlPelletsStore( pellets_level );
+			if ( config->mysql )
+				mysqlPelletsStore( pellets_level );
 #endif
 #ifdef _UDP
 			udpPelletsStore( pellets_level );
@@ -138,23 +139,41 @@ void mysqlSetup() {
 	}
 }
 
-void mysqlPelletsStore( int distance ) {
-	char query[256] = "";
-	if ( config->mysql ) {
-		sprintf( query, "INSERT INTO `ps_pellets` (`level`) VALUES (%d)", distance );
-		if ( mysql_query( db, query ) ) {
-			fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
+void mysqlPelletsStore( int level ) {
+	char         query[256] = "SELECT `id`, `level`, `samples` FROM `ps_pellets` ORDER BY `time` DESC LIMIT 1";
+	MYSQL_RES   *result;
+	
+	// Update samples if value remains the same
+	if ( !mysql_query( db, query ) ) {
+		result = mysql_store_result( db );
+		if ( result ) {
+			MYSQL_ROW row;
+			if ( ( row = mysql_fetch_row( result ) ) ) {
+				int old_lvl = atoi( row[1] );
+				if ( level == old_lvl )
+					sprintf( query, "UPDATE `ps_pellets` SET `samples`=%d WHERE `id`=%d", (atoi( row[2] )+1), atoi( row[0] ) );
+			}
+		} else {
+			fprintf( stderr, "ERROR in mysqlPelletsStore: Storing result!\n%s\n", mysql_error( db ) );
 		}
+	} else {
+		fprintf( stderr, "ERROR in mysqlPelletsStore: Selecting\n%s\n%s\n", mysql_error( db ), query );
+	}
+	
+	if ( query[0] == 'S' )
+		sprintf( query, "INSERT INTO `ps_pellets` (`level`) VALUES (%d)", level );
+	if ( mysql_query( db, query ) ) {
+		fprintf( stderr, "ERROR in mysqlQuery: \t%s.\n%s\n", mysql_error( db ), query );
 	}
 }
 #endif
 
 #ifdef _UDP
-void udpPelletsStore( int distance ) {
+void udpPelletsStore( int level ) {
 	fprintf( stderr, "Using UDP client: %s:%d\n", config->udpServer, config->udpPort );
 	char data[256] = "";
-	if ( distance > 0 && config->server ) {
-		sprintf( data, "PELL DIST%d", distance ); 
+	if ( level > 0 && config->server ) {
+		sprintf( data, "PELL DIST%d", level ); 
 		if ( client_udp( data, config->udpServer, config->udpPort ) == 1 )
 			config->server = 0;
 	}
