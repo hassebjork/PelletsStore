@@ -19,27 +19,27 @@ My setup is a Raspberry Pi model A, with a HC-SR04 connected to pins 11 & 12 (GP
 Requirements for the software is the WiringPi library and (optionally) libmysqlclient-dev.
 
 Update your system:
-
+```
   $ sudo apt-get update
   $ sudo apt-get upgrade
-
+```
 Installation of git and wiringPi:
-
+```
   $ sudo apt-get install git-core
   $ git clone git://git.drogon.net/wiringPi
   $ cd wiringPi
   $ ./build
-  
+```
 Installation of libmysqlclient-dev:
-
+```
   $ sudo apt-get install libmysqlclient-dev
-
+```
 Installing the program:
-
+```
   $ git clone https://github.com/hassebjork/PelletsStore/
   $ cd PelletsStore
   $ make
   $ sudo cp pellets-store.conf /etc/
-
+```
 To run the program every 10 minutes, add the following to crontab (using `crontab -e`):
-  */10 * * * * sudo /path/to/program/pellets-mysql
+`  */10 * * * * sudo /path/to/program/pellets-mysql`
