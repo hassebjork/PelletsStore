@@ -44,4 +44,6 @@ Installing the program:
 	$ sudo cp pellets-store.conf /etc/
 ```
 To run the program every 10 minutes, add the following to crontab (using `crontab -e`):
-`  */10 * * * * sudo /path/to/program/pellets-mysql`
+```
+  */10 * * * * sudo /path/to/program/pellets-mysql
+```
