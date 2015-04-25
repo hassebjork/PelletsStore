@@ -33,7 +33,8 @@ Installation of git and wiringPi:
 	$ ./build
 ```
 Installation of libmysqlclient-dev:
-```  $ sudo apt-get install libmysqlclient-dev
+```
+	$ sudo apt-get install libmysqlclient-dev
 ```
 Installing the program:
 ```
