@@ -172,8 +172,10 @@ void mysqlPelletsStore( int level ) {
 void udpPelletsStore( int level ) {
 	fprintf( stderr, "Using UDP client: %s:%d\n", config->udpServer, config->udpPort );
 	char data[256] = "";
-	if ( level > 0 && config->server ) {
-		sprintf( data, "PELL DIST%d", level ); 
+	if ( config->server && level > -128  && level < 128 ) {
+// 		sprintf( data, "PELL LVL%d", level ); 
+		sprintf( data, "PELL LVL%c", ( level + 128 ) );
+		printf( "'%s' %d\n", data, strlen( data ) );
 		if ( client_udp( data, config->udpServer, config->udpPort ) == 1 )
 			config->server = 0;
 	}

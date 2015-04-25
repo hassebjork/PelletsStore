@@ -13,6 +13,7 @@ An ultrasonic distance meter (HC-SR04), measures the level in the storage. In th
 `pellets-udp` sends the data to a server as a UDP-packet, for further processing.
 
 ## Hardware
+![HC-SR04](img/HC-SR04.png)
 My setup is a Raspberry Pi model A, with a HC-SR04 connected to pins 11 & 12 (GPIO17 & 18) and a WIFI-dongle (Realtek RTL8188CUS) providing a network connection. The data is stored on a remote MySQL server, to preserve the SD-card.
 
 ## Software
